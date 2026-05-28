@@ -7,9 +7,6 @@ import java.util.Optional;
 
 public interface ProfileRepository extends JpaRepository <ProfileEntity,Long>{
 
-
 Optional<ProfileEntity> findByEmail(String email);
-
-
 
 }
