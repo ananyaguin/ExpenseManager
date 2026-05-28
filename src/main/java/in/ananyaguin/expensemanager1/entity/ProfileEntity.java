@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ProfileEntity {
 @Id
-@GeneratedValue(strategy=GenerationType.IDENTITY)
+//@GeneratedValue(strategy=GenerationType.IDENTITY)
     private long id;
     private String fullName;
     @Column(unique=true)
