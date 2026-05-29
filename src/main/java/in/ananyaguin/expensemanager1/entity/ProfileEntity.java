@@ -18,8 +18,8 @@ import java.time.LocalDateTime;
 @Builder
 public class ProfileEntity {
 @Id
-//@GeneratedValue(strategy=GenerationType.IDENTITY)
-    private long id;
+@GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
     private String fullName;
     @Column(unique=true)
     private String email;
@@ -34,6 +34,7 @@ public class ProfileEntity {
     private String activationToken;
 
 
+    @PrePersist
     public void prePersist(){
 
         if (this.isActive==null){

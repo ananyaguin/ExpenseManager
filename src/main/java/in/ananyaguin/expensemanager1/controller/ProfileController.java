@@ -5,18 +5,25 @@ import in.ananyaguin.expensemanager1.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/profiles")
 @RequiredArgsConstructor
 public class ProfileController {
 
-  private final ProfileService profileService;
-  @PostMapping("/Register")
-  public ResponseEntity<ProfileDto> registerProfile(@RequestBody ProfileDto profileDto){
-      ProfileDto registerProfile =profileService.registerProfile( profileDto);
-      return ResponseEntity.status(HttpStatus.CREATED).body(registerProfile);
-  }
+    private final ProfileService profileService;
+
+    @PostMapping("/register")
+    public ResponseEntity<ProfileDto> registerProfile(
+            @RequestBody ProfileDto profileDto
+    ) {
+
+        ProfileDto registeredProfile =
+                profileService.registerProfile(profileDto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(registeredProfile);
+    }
 }

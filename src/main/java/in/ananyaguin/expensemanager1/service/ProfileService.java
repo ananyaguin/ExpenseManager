@@ -22,6 +22,7 @@ public class ProfileService {
         );
         newProfile = profileRepository.save(newProfile);
         return toDto(newProfile);
+
     }
 
     public ProfileEntity toEntity(ProfileDto profileDto){
@@ -42,10 +43,13 @@ public class ProfileService {
                 .id(profileEntity.getId())
                 .fullName(profileEntity.getFullName())
                 .email(profileEntity.getEmail())
-               // .password(profileEntity.getPassword())
+                .password(profileEntity.getPassword())
                 .profileImageUrl(profileEntity.getProfileImageUrl())
                 .createdAt(profileEntity.getCreatedAt())
                 .updatedAt(profileEntity.getUpdatedAt())
                 .build();
     }
+
+
+
 }
