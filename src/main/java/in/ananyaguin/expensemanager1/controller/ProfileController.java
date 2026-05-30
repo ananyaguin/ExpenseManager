@@ -17,7 +17,9 @@ public class ProfileController {
     @PostMapping("/register")
     public ResponseEntity<ProfileDto> registerProfile(
             @RequestBody ProfileDto profileDto
-    ) {
+    )
+
+    {
 
         ProfileDto registeredProfile =
                 profileService.registerProfile(profileDto);
