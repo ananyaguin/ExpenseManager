@@ -13,7 +13,7 @@ import java.util.UUID;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
-
+    private final EmailService emailService;
     public ProfileDto registerProfile(ProfileDto profileDto){
 
         ProfileEntity newProfile = toEntity(profileDto);
@@ -21,6 +21,15 @@ public class ProfileService {
                 UUID.randomUUID().toString()
         );
         newProfile = profileRepository.save(newProfile);
+        //send Activation email
+        String activationLink =
+                "http://localhost:8080/api/v1.0/activate?token=" + newProfile.getActivationToken();
+        String subject=
+                "Activate your Money Manager account";
+        String body =
+                "Click on the following link to Activate your Expense Manager Account:\n\n"
+                        + activationLink;
+        emailService.sendEmail(newProfile.getEmail(),subject,body);
         return toDto(newProfile);
 
     }
