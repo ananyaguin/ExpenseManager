@@ -27,7 +27,6 @@ private String fromMail;
     catch (Exception e) {
 
         e.printStackTrace();   // IMPORTANT
-
         throw new RuntimeException("Email failed", e);
     }
     }
