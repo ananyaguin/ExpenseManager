@@ -33,7 +33,6 @@ public class ProfileEntity {
     private Boolean isActive;
     private String activationToken;
 
-
     @PrePersist
     public void prePersist(){
 
