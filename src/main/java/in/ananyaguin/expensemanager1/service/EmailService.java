@@ -26,7 +26,7 @@ private String fromMail;
        }
     catch (Exception e) {
 
-        e.printStackTrace();
+     e.printStackTrace();
         throw new RuntimeException("Email Authentication failed", e);
           }
        }
