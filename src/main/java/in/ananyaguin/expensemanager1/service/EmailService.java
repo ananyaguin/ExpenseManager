@@ -26,10 +26,10 @@ private String fromMail;
        }
     catch (Exception e) {
 
-        e.printStackTrace();   // IMPORTANT
-        throw new RuntimeException("Email failed", e);
-    }
-    }
+        e.printStackTrace();
+        throw new RuntimeException("Email Authentication failed", e);
+          }
+       }
 
     }
 
