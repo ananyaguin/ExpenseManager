@@ -23,7 +23,7 @@ public class ProfileService {
         newProfile = profileRepository.save(newProfile);
         //send Activation email
         String activationLink =
-                "http://localhost:8080/api/v1.0/activate?token=" + newProfile.getActivationToken();
+                "http://localhost:8080/api/v1.0/profiles/activate?token=" + newProfile.getActivationToken();
         String subject=
                 "Activate your Money Manager account";
         String body =
@@ -59,6 +59,15 @@ public class ProfileService {
                 .build();
     }
 
+    public boolean activateProfile(String activationToken) {
 
+        return profileRepository.findByActivationToken(activationToken)
+                .map(profile -> {
+                    profile.setIsActive(true);
+                    profileRepository.save(profile);
+                    return true;
+                })
+                .orElse(false);
+    }
 
 }
