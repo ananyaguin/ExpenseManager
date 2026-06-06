@@ -18,9 +18,7 @@ public class ProfileController {
     public ResponseEntity<ProfileDto> registerProfile(
             @RequestBody ProfileDto profileDto
     )
-
     {
-
         ProfileDto registeredProfile =
                 profileService.registerProfile(profileDto);
 
@@ -28,4 +26,19 @@ public class ProfileController {
                 .status(HttpStatus.CREATED)
                 .body(registeredProfile);
     }
-}
+    @GetMapping("/activate")
+    public ResponseEntity<String> activateProfile(
+            @RequestParam("token") String activationToken) {
+
+        boolean isActivated =
+                profileService.activateProfile(activationToken);
+
+        if (isActivated) {
+            return ResponseEntity.ok("Profile activated successfully");
+        }
+
+        return ResponseEntity.badRequest()
+                .body("Invalid activation token");
+    }
+    }
+    
