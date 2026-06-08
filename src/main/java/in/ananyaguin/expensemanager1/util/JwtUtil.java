@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.crypto.SecretKey;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -41,11 +41,11 @@ public class JwtUtil {
 
     private Claims extractAllClaims(String token) {
 
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     private boolean isTokenExpired(String token) {
@@ -67,9 +67,9 @@ public class JwtUtil {
     public String generateToken(String email) {
 
         return Jwts.builder()
-                .subject(email)
-                .issuedAt(new Date())
-                .expiration(
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(
                         new Date(
                                 System.currentTimeMillis()
                                         + 1000L * 60 * 60 * 10
