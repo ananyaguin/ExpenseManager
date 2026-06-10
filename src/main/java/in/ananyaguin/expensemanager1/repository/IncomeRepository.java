@@ -39,4 +39,6 @@ public interface IncomeRepository extends JpaRepository<IncomeEntity, Long> {
             LocalDate startDate,
             LocalDate endDate
     );
+
+    BigDecimal findTotalIncomeByProfileId(Long id);
 }
