@@ -78,7 +78,6 @@ public class NotificationService {
                                 + "<th style='border:1px solid #ddd;padding:8px;'>Category</th>"
                                 + "</tr>"
                 );
-
                 int i = 1;
 
                 for (ExpenseDTO expense : todaysExpenses) {
