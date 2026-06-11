@@ -79,7 +79,6 @@ public class NotificationService {
                                 + "</tr>"
                 );
                 int i = 1;
-
                 for (ExpenseDTO expense : todaysExpenses) {
 
                     table.append("<tr>");
