@@ -19,8 +19,12 @@ public interface IncomeRepository extends JpaRepository<IncomeEntity, Long> {
     List<IncomeEntity> findTop5ByProfileIdOrderByDateDesc(Long profileId);
 
     // Total income
-    @Query("SELECT SUM(i.amount) FROM IncomeEntity i WHERE i.profile.id = :profileId")
-    BigDecimal findTotalExpenseByProfileId(
+    @Query("""
+        SELECT COALESCE(SUM(i.amount), 0)
+        FROM IncomeEntity i
+        WHERE i.profile.id = :profileId
+        """)
+    BigDecimal findTotalIncomeByProfileId(
             @Param("profileId") Long profileId
     );
 
@@ -40,5 +44,5 @@ public interface IncomeRepository extends JpaRepository<IncomeEntity, Long> {
             LocalDate endDate
     );
 
-    BigDecimal findTotalIncomeByProfileId(Long id);
+   // BigDecimal findTotalIncomeByProfileId(Long id);
 }
