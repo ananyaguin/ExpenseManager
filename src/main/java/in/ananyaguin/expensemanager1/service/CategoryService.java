@@ -89,7 +89,6 @@ public class CategoryService {
                 .type(categoryDTO.getType())
                 .build();
     }
-
     // Convert Entity -> DTO
     private CategoryDTO toDTO(CategoryEntity entity) {
 
@@ -106,5 +105,6 @@ public class CategoryService {
                 .updatedAt(entity.getUpdatedAt())
                 .type(entity.getType())
                 .build();
+
     }
 }
