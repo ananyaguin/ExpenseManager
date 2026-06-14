@@ -89,7 +89,7 @@ public class CategoryService {
                 .type(categoryDTO.getType())
                 .build();
     }
-    // Convert Entity -> DTO
+
     private CategoryDTO toDTO(CategoryEntity entity) {
 
         return CategoryDTO.builder()
