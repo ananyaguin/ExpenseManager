@@ -35,7 +35,6 @@ public class ExcelController {
                 incomeService.getCurrentMonthIncomesForCurrentUser()
         );
     }
-
     @GetMapping("/download/expense")
     public void downloadExpenseExcel(HttpServletResponse response) throws IOException {
 
