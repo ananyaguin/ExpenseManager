@@ -126,7 +126,6 @@ public class ExcelService {
                                                 : ""
                                 );
                     });
-
             workbook.write(os);
         }
     }
