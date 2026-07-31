@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class CategoryDTO {
-
     private Long id;
     private Long profileId;
     private String name;
