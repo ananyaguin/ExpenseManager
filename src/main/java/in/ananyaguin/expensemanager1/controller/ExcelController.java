@@ -22,7 +22,6 @@ public class ExcelController {
 
     @GetMapping("/download/income")
     public void downloadIncomeExcel(HttpServletResponse response) throws IOException {
-
         response.setContentType(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
