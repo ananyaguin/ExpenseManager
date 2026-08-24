@@ -12,7 +12,6 @@ public class FilterDTO {
     private LocalDate endDate;
 
     private String keyword;
-
     private String sortField; // date, amount, name
     private String sortOrder; // asc or desc
 }
