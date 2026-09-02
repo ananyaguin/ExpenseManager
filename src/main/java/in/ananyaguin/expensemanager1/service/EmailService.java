@@ -19,7 +19,6 @@ private final JavaMailSender mailSender;
 private String fromMail;
 
     public void sendEmail(String to,String subject,String body){
-
     try{
         SimpleMailMessage message=new SimpleMailMessage();
         message.setFrom(fromMail);
