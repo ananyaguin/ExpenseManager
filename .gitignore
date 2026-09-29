@@ -2,6 +2,13 @@ HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 
+# Local environment & secret files
+.env
+.env.*
+.env.local
+!.env.example
+
+
 
 ### STS ###
 .apt_generated

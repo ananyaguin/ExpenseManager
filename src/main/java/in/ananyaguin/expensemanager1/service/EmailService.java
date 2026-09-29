@@ -19,6 +19,9 @@ public class EmailService {
     @Value("${spring.mail.properties.mail.smtp.from:}")
     private String fromMail;
 
+    @Value("${app.mail.from-name:Expense Manager}")
+    private String fromName;
+
     @Value("${spring.mail.host:smtp-relay.brevo.com}")
     private String mailHost;
 
@@ -29,10 +32,21 @@ public class EmailService {
     private String mailUsername;
 
     private String getCleanFromMail() {
-        if (fromMail == null) {
-            return "";
+        if (fromMail == null || fromMail.trim().isEmpty()) {
+            return (mailUsername != null) ? mailUsername.replace("\"", "").replace("'", "").trim() : "";
         }
         return fromMail.replace("\"", "").replace("'", "").trim();
+    }
+
+    private String getSenderFormatted() {
+        String cleanEmail = getCleanFromMail();
+        if (cleanEmail.isEmpty()) {
+            return "";
+        }
+        if (fromName != null && !fromName.trim().isEmpty()) {
+            return fromName.trim() + " <" + cleanEmail + ">";
+        }
+        return cleanEmail;
     }
 
     public void sendEmail(String to, String subject, String body) {
@@ -40,7 +54,7 @@ public class EmailService {
         System.out.println("[EMAIL] Attempting to send email...");
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(getCleanFromMail());
+            message.setFrom(getSenderFormatted());
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
@@ -64,7 +78,15 @@ public class EmailService {
     public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setFrom(getCleanFromMail());
+        try {
+            if (fromName != null && !fromName.trim().isEmpty()) {
+                helper.setFrom(getCleanFromMail(), fromName.trim());
+            } else {
+                helper.setFrom(getCleanFromMail());
+            }
+        } catch (java.io.UnsupportedEncodingException e) {
+            helper.setFrom(getCleanFromMail());
+        }
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(body);
