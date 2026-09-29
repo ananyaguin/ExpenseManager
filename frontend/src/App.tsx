@@ -12,6 +12,8 @@ import ExpensesPage from "./pages/ExpensesPage";
 import IncomesPage from "./pages/IncomesPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import TransactionsPage from "./pages/TransactionsPage";
+import BudgetsPage from "./pages/BudgetsPage";
+import ReportsPage from "./pages/ReportsPage";
 import ProfilePage from "./pages/ProfilePage";
 
 const App: React.FC = () => {
@@ -60,6 +62,8 @@ const App: React.FC = () => {
             <Route path="/incomes" element={<IncomesPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/budgets" element={<BudgetsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             {/* Legacy alias redirects */}
@@ -67,6 +71,8 @@ const App: React.FC = () => {
             <Route path="/income" element={<Navigate to="/incomes" replace />} />
             <Route path="/category" element={<Navigate to="/categories" replace />} />
             <Route path="/filter" element={<Navigate to="/transactions" replace />} />
+            <Route path="/budget" element={<Navigate to="/budgets" replace />} />
+            <Route path="/report" element={<Navigate to="/reports" replace />} />
           </Route>
 
           {/* Root and Fallback */}
