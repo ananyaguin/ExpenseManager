@@ -18,25 +18,39 @@ private final JavaMailSender mailSender;
 @Value("${spring.mail.properties.mail.smtp.from}")
 private String fromMail;
 
-    public void sendEmail(String to,String subject,String body){
-    try{
-        SimpleMailMessage message=new SimpleMailMessage();
-        message.setFrom(fromMail);
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
-        mailSender.send(message);
-       }
-    catch (Exception e) {
+    private String getCleanFromMail() {
+        if (fromMail == null) {
+            return "";
+        }
+        return fromMail.replace("\"", "").replace("'", "").trim();
+    }
 
-     e.printStackTrace();
-        throw new RuntimeException("Email Authentication failed", e);
-          }
-       }
+    public void sendEmail(String to, String subject, String body) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(getCleanFromMail());
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            mailSender.send(message);
+            System.out.println("Activation email sent successfully to: " + to);
+        } catch (Exception e) {
+            String errorDetail = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                errorDetail += " (Cause: " + e.getCause().getMessage() + ")";
+            }
+            System.err.println("Email sending failed for " + to + ": " + errorDetail);
+            System.out.println("--------------------------------------------------");
+            System.out.println("Local Account Activation Fallback:");
+            System.out.println(body);
+            System.out.println("--------------------------------------------------");
+        }
+    }
+
     public void sendEmailWithAttachment(String to, String subject, String body, byte[] attachment, String filename) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setFrom(fromMail);
+        helper.setFrom(getCleanFromMail());
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(body);
