@@ -12,8 +12,11 @@ import {
   X,
   Wallet,
   ChevronDown,
+  Target,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import NotificationDropdown from "./NotificationDropdown";
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -25,6 +28,8 @@ const navItems = [
   { label: "Transactions", path: "/transactions", icon: ArrowLeftRight },
   { label: "Expenses", path: "/expenses", icon: TrendingDown },
   { label: "Income", path: "/incomes", icon: TrendingUp },
+  { label: "Budgets", path: "/budgets", icon: Target },
+  { label: "Reports", path: "/reports", icon: BarChart3 },
   { label: "Categories", path: "/categories", icon: Tags },
 ];
 
@@ -62,6 +67,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, pageTitle }) => 
     if (path.startsWith("/transactions")) return "Transactions Explorer";
     if (path.startsWith("/expenses")) return "Expenses";
     if (path.startsWith("/incomes")) return "Income Records";
+    if (path.startsWith("/budgets")) return "Budget Management";
+    if (path.startsWith("/reports")) return "Financial Reports";
     if (path.startsWith("/categories")) return "Categories";
     if (path.startsWith("/profile")) return "User Profile";
     return "Expense Manager";
@@ -237,12 +244,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, pageTitle }) => 
             </div>
           </div>
 
-          {/* User profile dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-3 p-1.5 pl-3 rounded-full hover:bg-slate-100/80 transition-colors cursor-pointer border border-transparent hover:border-slate-200"
-            >
+          {/* Right header actions: Notifications + Profile */}
+          <div className="flex items-center gap-3">
+            <NotificationDropdown />
+
+            {/* User profile dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-3 p-1.5 pl-3 rounded-full hover:bg-slate-100/80 transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+              >
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-slate-900 leading-tight">
                   {user?.fullName || "Account"}
@@ -302,7 +313,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, pageTitle }) => 
               </div>
             )}
           </div>
-        </header>
+        </div>
+      </header>
 
         {/* Page Content */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl w-full mx-auto">

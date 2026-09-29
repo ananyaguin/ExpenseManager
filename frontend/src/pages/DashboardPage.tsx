@@ -7,6 +7,11 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowDownLeft,
+  Calendar,
+  Target,
+  AlertTriangle,
+  AlertCircle,
+  PieChart as PieChartIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -21,22 +26,45 @@ import {
 } from "recharts";
 import AppLayout from "../components/layout/AppLayout";
 import { dashboardApi } from "../api/dashboardApi";
-import { DashboardData, RecentTransaction } from "../types";
+import { expenseApi } from "../api/expenseApi";
+import { DashboardData, RecentTransaction, ExpenseDTO } from "../types";
 import { formatCurrency, formatDate, formatShortDate } from "../util/formatters";
 import { CardSkeleton, ChartSkeleton, TableSkeleton } from "../components/common/LoadingSkeleton";
 import EmptyState from "../components/common/EmptyState";
 import CategoryIcon from "../components/common/CategoryIcon";
 import { getErrorMessage } from "../api/errorUtil";
+import { useAuth } from "../context/AuthContext";
+import { getBudgetConfig } from "../util/budgetStorage";
+
+const CATEGORY_COLORS = [
+  "#6366f1",
+  "#10b981",
+  "#f43f5e",
+  "#f59e0b",
+  "#8b5cf6",
+  "#06b6d4",
+  "#ec4899",
+];
 
 export const DashboardPage: React.FC = () => {
+  const { user } = useAuth();
+  const userId = user?.id || user?.email;
+
   const [data, setData] = useState<DashboardData | null>(null);
+  const [currentExpenses, setCurrentExpenses] = useState<ExpenseDTO[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const budgetConfig = getBudgetConfig(userId);
 
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const res = await dashboardApi.getDashboardData();
-      setData(res);
+      const [dashRes, expRes] = await Promise.all([
+        dashboardApi.getDashboardData(),
+        expenseApi.getExpenses(),
+      ]);
+      setData(dashRes);
+      setCurrentExpenses(expRes || []);
     } catch (err: any) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -46,7 +74,32 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [userId]);
+
+  // Current Month Spending
+  const currentMonthSpending = currentExpenses.reduce(
+    (acc, exp) => acc + Number(exp.amount || 0),
+    0
+  );
+
+  // Category breakdown calculation
+  const categoryMap: { [name: string]: { name: string; amount: number; icon?: string } } = {};
+  currentExpenses.forEach((exp) => {
+    const key = exp.categoryName || "Uncategorized";
+    if (!categoryMap[key]) {
+      categoryMap[key] = { name: key, amount: 0, icon: exp.icon };
+    }
+    categoryMap[key].amount += Number(exp.amount || 0);
+  });
+
+  const categoryBreakdown = Object.values(categoryMap).sort((a, b) => b.amount - a.amount);
+
+  // Budget status for current month
+  const monthlyBudget = budgetConfig.monthlyBudget;
+  const isBudgetSet = monthlyBudget > 0;
+  const budgetRatio = isBudgetSet ? (currentMonthSpending / monthlyBudget) * 100 : 0;
+  const isOverBudget = isBudgetSet && currentMonthSpending > monthlyBudget;
+  const isNearLimit = isBudgetSet && !isOverBudget && budgetRatio >= 80;
 
   // Prepare chart data from recent transactions or recent incomes/expenses
   const prepareChartData = () => {
@@ -54,7 +107,6 @@ export const DashboardPage: React.FC = () => {
 
     const txMap: { [date: string]: { date: string; income: number; expense: number } } = {};
 
-    // Group transactions by date
     const allTx: RecentTransaction[] = data.recentTransactions || [];
     allTx.forEach((tx) => {
       const dateKey = tx.date;
@@ -68,7 +120,6 @@ export const DashboardPage: React.FC = () => {
       }
     });
 
-    // Also include recentIncomes and recentExpenses if not already in txMap
     (data.recentIncomes || []).forEach((inc) => {
       const dateKey = inc.date;
       if (!txMap[dateKey]) {
@@ -83,7 +134,6 @@ export const DashboardPage: React.FC = () => {
       }
     });
 
-    // Sort by date ascending
     const sorted = Object.values(txMap).sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
@@ -117,7 +167,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <AppLayout pageTitle="Dashboard">
-      <div className="space-y-7">
+      <div className="space-y-7 pb-12">
         {/* Welcome Greeting Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -129,7 +179,7 @@ export const DashboardPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/expenses"
-              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-sm transition-colors"
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-2xs transition-colors"
             >
               Manage Expenses
             </Link>
@@ -142,29 +192,64 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Budget Alert Banner if Exceeded or Near Limit */}
+        {isBudgetSet && (isOverBudget || isNearLimit) && (
+          <div
+            className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
+              isOverBudget
+                ? "bg-rose-50 border-rose-200 text-rose-800"
+                : "bg-amber-50 border-amber-200 text-amber-800"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {isOverBudget ? (
+                <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              )}
+              <div>
+                <p className="text-xs font-bold">
+                  {isOverBudget ? "Monthly Budget Exceeded!" : "Budget Warning (80% Reached)"}
+                </p>
+                <p className="text-xs mt-0.5 opacity-90">
+                  {isOverBudget
+                    ? `You have spent ${formatCurrency(currentMonthSpending)}, exceeding your monthly target of ${formatCurrency(monthlyBudget)}.`
+                    : `You have utilized ${Math.round(budgetRatio)}% of your monthly budget (${formatCurrency(currentMonthSpending)} / ${formatCurrency(monthlyBudget)}).`}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/budgets"
+              className="px-3 py-1.5 rounded-xl bg-white text-xs font-semibold shadow-2xs border border-inherit hover:bg-slate-50 transition-colors flex-shrink-0"
+            >
+              View Budget
+            </Link>
+          </div>
+        )}
+
         {/* ============================================================ */}
-        {/* SUMMARY CARDS */}
+        {/* SUMMARY CARDS (4 KPI Metrics) */}
         {/* ============================================================ */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Total Balance Card */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full blur-2xl -mr-6 -mt-6 group-hover:bg-indigo-100/50 transition-colors"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Total Balance
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                  <WalletCards className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <WalletCards className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-1">
+              <div className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
                 {formatCurrency(data?.totalBalance)}
               </div>
               <p className="text-xs font-medium text-indigo-600 flex items-center gap-1">
@@ -173,53 +258,75 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Total Income Card */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50/50 rounded-full blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-100/50 transition-colors"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Total Income
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-emerald-600 tracking-tight mb-1">
+              <div className="text-2xl font-bold text-emerald-600 tracking-tight mb-1">
                 {formatCurrency(data?.totalIncome)}
               </div>
               <p className="text-xs font-medium text-emerald-700 flex items-center gap-1">
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>Total earnings</span>
+                <span>All-time earnings</span>
               </p>
             </div>
 
             {/* Total Expense Card */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50/50 rounded-full blur-2xl -mr-6 -mt-6 group-hover:bg-rose-100/50 transition-colors"></div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Total Expense
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Total Expenses
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                  <TrendingDown className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold text-rose-600 tracking-tight mb-1">
+              <div className="text-2xl font-bold text-rose-600 tracking-tight mb-1">
                 {formatCurrency(data?.totalExpense)}
               </div>
               <p className="text-xs font-medium text-rose-700 flex items-center gap-1">
                 <ArrowDownLeft className="w-3.5 h-3.5" />
-                <span>Total spendings</span>
+                <span>All-time spendings</span>
+              </p>
+            </div>
+
+            {/* Current Month Spending Card */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Current Month Spending
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                  <Calendar className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-slate-900 tracking-tight mb-1">
+                {formatCurrency(currentMonthSpending)}
+              </div>
+              <p className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                {isBudgetSet ? (
+                  <span className={isOverBudget ? "text-rose-600 font-semibold" : "text-slate-600"}>
+                    {Math.round(budgetRatio)}% of monthly budget
+                  </span>
+                ) : (
+                  <span>{currentExpenses.length} transactions this month</span>
+                )}
               </p>
             </div>
           </div>
         )}
 
         {/* ============================================================ */}
-        {/* CHART SECTION & QUICK SUMMARY */}
+        {/* CHART SECTION & EXPENSE CATEGORY BREAKDOWN */}
         {/* ============================================================ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Income vs Expense Chart (2 columns) */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Income vs Expense</h3>
@@ -253,109 +360,75 @@ export const DashboardPage: React.FC = () => {
                       tickFormatter={(val) => `₹${val}`}
                     />
                     <Tooltip content={<CustomChartTooltip />} />
-                    <Legend
-                      wrapperStyle={{ paddingTop: "14px", fontSize: "12px" }}
-                      iconType="circle"
-                    />
-                    <Bar
-                      dataKey="income"
-                      name="Income"
-                      fill="#10b981"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={36}
-                    />
-                    <Bar
-                      dataKey="expense"
-                      name="Expense"
-                      fill="#f43f5e"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={36}
-                    />
+                    <Legend wrapperStyle={{ paddingTop: "14px", fontSize: "12px" }} iconType="circle" />
+                    <Bar dataKey="income" name="Income" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={36} />
+                    <Bar dataKey="expense" name="Expense" fill="#f43f5e" radius={[6, 6, 0, 0]} maxBarSize={36} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             )}
           </div>
 
-          {/* Quick Summary Side Box (1 column) */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+          {/* Expense Category Breakdown (1 column) */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">Cash Flow Balance</h3>
-              <p className="text-xs text-slate-500 mb-5">Current month financial health</p>
-
-              <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="flex justify-between items-center text-xs font-semibold text-slate-600 mb-1.5">
-                    <span>Income Share</span>
-                    <span className="text-emerald-600 font-bold">
-                      {data?.totalIncome && (Number(data.totalIncome) + Number(data.totalExpense)) > 0
-                        ? `${Math.round(
-                            (Number(data.totalIncome) /
-                              (Number(data.totalIncome) + Number(data.totalExpense))) *
-                              100
-                          )}%`
-                        : "0%"}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${
-                          data?.totalIncome &&
-                          Number(data.totalIncome) + Number(data.totalExpense) > 0
-                            ? Math.round(
-                                (Number(data.totalIncome) /
-                                  (Number(data.totalIncome) + Number(data.totalExpense))) *
-                                  100
-                              )
-                            : 0
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="flex justify-between items-center text-xs font-semibold text-slate-600 mb-1.5">
-                    <span>Expense Ratio</span>
-                    <span className="text-rose-600 font-bold">
-                      {data?.totalExpense && (Number(data.totalIncome) + Number(data.totalExpense)) > 0
-                        ? `${Math.round(
-                            (Number(data.totalExpense) /
-                              (Number(data.totalIncome) + Number(data.totalExpense))) *
-                              100
-                          )}%`
-                        : "0%"}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-rose-500 h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${
-                          data?.totalExpense &&
-                          Number(data.totalIncome) + Number(data.totalExpense) > 0
-                            ? Math.round(
-                                (Number(data.totalExpense) /
-                                  (Number(data.totalIncome) + Number(data.totalExpense))) *
-                                  100
-                              )
-                            : 0
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base font-bold text-slate-900">Expense Category Breakdown</h3>
+                <PieChartIcon className="w-4 h-4 text-indigo-600" />
               </div>
+              <p className="text-xs text-slate-500 mb-4">Current month spending by category</p>
+
+              {loading ? (
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-10 bg-slate-100 rounded-xl"></div>
+                  <div className="h-10 bg-slate-100 rounded-xl"></div>
+                  <div className="h-10 bg-slate-100 rounded-xl"></div>
+                </div>
+              ) : categoryBreakdown.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-xs">
+                  No expenses recorded this month yet.
+                </div>
+              ) : (
+                <div className="space-y-3.5 max-h-64 overflow-y-auto pr-1">
+                  {categoryBreakdown.slice(0, 5).map((cat, idx) => {
+                    const percentage =
+                      currentMonthSpending > 0
+                        ? Math.round((cat.amount / currentMonthSpending) * 100)
+                        : 0;
+                    const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+                    return (
+                      <div key={cat.name} className="space-y-1">
+                        <div className="flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+                            <span className="font-semibold text-slate-800">{cat.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500 font-medium">{percentage}%</span>
+                            <span className="font-bold text-slate-900">
+                              {formatCurrency(cat.amount)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${percentage}%`, backgroundColor: color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="pt-6 border-t border-slate-100 mt-6">
+            <div className="pt-4 border-t border-slate-100 mt-4">
               <Link
-                to="/transactions"
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                to="/reports"
+                className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
               >
-                <span>Explore Full Transactions</span>
+                <span>View Full Reports & Analytics</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -365,7 +438,7 @@ export const DashboardPage: React.FC = () => {
         {/* ============================================================ */}
         {/* RECENT TRANSACTIONS TABLE */}
         {/* ============================================================ */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-base font-bold text-slate-900">Recent Transactions</h3>
