@@ -15,6 +15,8 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
+
+
     @Value("${jwt.secret}")
     private String secret;
 
@@ -38,7 +40,6 @@ public class JwtUtil {
 
         return claimsResolver.apply(claims);
     }
-
     private Claims extractAllClaims(String token) {
 
         return Jwts.parserBuilder()
@@ -81,5 +82,7 @@ public class JwtUtil {
                 )
                 .compact();
     }
+
+
 
 }
