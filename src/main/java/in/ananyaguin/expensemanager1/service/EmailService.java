@@ -16,7 +16,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.properties.mail.smtp.from:${BREVO_FROM_EMAIL:}}")
+    @Value("${spring.mail.properties.mail.smtp.from:}")
     private String fromMail;
 
     @Value("${spring.mail.host:smtp-relay.brevo.com}")
