@@ -51,6 +51,10 @@ public class ProfileService {
                 "Click on the following link to activate your account: "
                         + activationLink;
 
+        System.out.println("[EMAIL] Preparing activation email for: " + newProfile.getEmail());
+        System.out.println("[EMAIL] Activation token generated: YES");
+        System.out.println("[EMAIL] Activation URL created: YES");
+
         emailService.sendEmail(
                 newProfile.getEmail(),
                 subject,

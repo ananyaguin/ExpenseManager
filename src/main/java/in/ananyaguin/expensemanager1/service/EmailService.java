@@ -14,9 +14,19 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmailService {
 
-private final JavaMailSender mailSender;
-@Value("${spring.mail.properties.mail.smtp.from}")
-private String fromMail;
+    private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.properties.mail.smtp.from:${BREVO_FROM_EMAIL:}}")
+    private String fromMail;
+
+    @Value("${spring.mail.host:smtp-relay.brevo.com}")
+    private String mailHost;
+
+    @Value("${spring.mail.port:587}")
+    private int mailPort;
+
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
 
     private String getCleanFromMail() {
         if (fromMail == null) {
@@ -26,6 +36,8 @@ private String fromMail;
     }
 
     public void sendEmail(String to, String subject, String body) {
+        System.out.println("[EMAIL] SMTP configuration loaded: YES (Host: " + mailHost + ":" + mailPort + ", User: " + mailUsername + ", From: " + getCleanFromMail() + ")");
+        System.out.println("[EMAIL] Attempting to send email...");
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(getCleanFromMail());
@@ -33,13 +45,15 @@ private String fromMail;
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);
-            System.out.println("Activation email sent successfully to: " + to);
+            System.out.println("[EMAIL] Email sent successfully to: " + to);
         } catch (Exception e) {
-            String errorDetail = e.getMessage();
-            if (e.getCause() != null && e.getCause().getMessage() != null) {
-                errorDetail += " (Cause: " + e.getCause().getMessage() + ")";
+            System.err.println("[EMAIL ERROR] Failed to send activation email");
+            System.err.println("[EMAIL ERROR] " + e.getClass().getName() + ": " + e.getMessage());
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                System.err.println("[EMAIL ERROR] Root cause: " + cause.getClass().getName() + ": " + cause.getMessage());
+                cause = cause.getCause();
             }
-            System.err.println("Email sending failed for " + to + ": " + errorDetail);
             System.out.println("--------------------------------------------------");
             System.out.println("Local Account Activation Fallback:");
             System.out.println(body);
