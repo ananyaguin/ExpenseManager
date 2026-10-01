@@ -277,7 +277,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Total Expense Card */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Total Expenses
@@ -296,7 +296,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Current Month Spending Card */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Current Month Spending

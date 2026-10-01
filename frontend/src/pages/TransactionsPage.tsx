@@ -435,10 +435,10 @@ export const TransactionsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {displayedResults.map((tx: any) => {
+                  {displayedResults.map((tx: any, idx: number) => {
                     const isIncome = type === "income";
                     return (
-                      <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center">
                             <CategoryIcon
