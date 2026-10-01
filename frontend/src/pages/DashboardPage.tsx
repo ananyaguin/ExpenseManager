@@ -240,7 +240,7 @@ export const DashboardPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Total Balance Card */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden group animate-slide-up" style={{ animationDelay: '0.1s' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Total Balance
