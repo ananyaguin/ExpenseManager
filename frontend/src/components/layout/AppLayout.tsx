@@ -317,7 +317,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, pageTitle }) => 
       </header>
 
         {/* Page Content */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl w-full mx-auto animate-fade-in">
           {children}
         </main>
       </div>
